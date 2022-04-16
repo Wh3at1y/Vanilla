@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Back End Assessment</title>
+  <link href="index.css" type="text/css" rel="stylesheet" />
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body class="container">
+
+  <section class="wrapper">
+    <img src="https://cdn-icons-png.flaticon.com/512/2040/2040698.png" alt='logo' class="main_logo" />
+    <div class="top_buttons_container">
+      <button id="complimentButton" class="top_buttons">Get a compliment</button>
+      <button id="fortuneButton" class="top_buttons">Get a fortune</button>
+    </div>
+    
+    <section class="compliment" id="compliment_container"></section>
+
+    <div style="width: 100%;">
+      <input type="text" id="movieInput" placeholder="Input movies to watch here!" />
+      <button id="submit" class="submit_button">Submit</button>
+      <ul id="movie-list"></ul>
+
+      <section class="bottom_inputs">
+        <input type="text" id="whatToUpdate" placeholder="Movie you want to update" />
+        <input type="text" id="whatToUpdateTo" placeholder="What you want to update to" />
+        <button id="updateButton" class="update_button" onclick="updateMovies()">Update</button>
+      </section>
+    </div>
+  </section>
+
+</body>
+
+<script>
+  const baseURL = `http://localhost:4000/api`;
+  const complimentButton = document.getElementById("complimentButton")
+  const fortuneButton = document.getElementById("fortuneButton")
+
+  complimentButton.onclick = () => {
+    axios.get(`${baseURL}/compliment/`).then(function (response) {
+      const data = response.data;
+      document.getElementById('compliment_container').style.display = 'flex'
+      document.getElementById('compliment_container').innerText = data
+    });
+  };
+  document.getElementById("fortuneButton").onclick = function () {
+    axios.get(`${baseURL}/fortune/`).then(function (response) {
+      const data = response.data;
+      document.getElementById('compliment_container').style.display = 'flex'
+      document.getElementById('compliment_container').innerText = data
+    });
+  };
+  document.getElementById("submit").onclick = function () {
+    axios.post(`${baseURL}/movie/`, { movieName: movieInput.value })
+      .then(function (response) {
+        const data = response.data;
+        document.getElementById("movie-list").innerHTML = "";
+        renderMovies(response);
+      }).catch(function (error) {
+        alert(error.response.data);
+      });
+  };
+  axios.get(`${baseURL}/movie/`).then(function (response) {
+    renderMovies(response);
+  });
+  const deleteMovie = (index) => {
+    axios.delete(`${baseURL}/movie/` + index).then(function (response) {
+      document.getElementById("movie-list").innerHTML = "";
+      renderMovies(response);
+    });
+  };
+  const updateMovies = (response) => {
+    const movieToUpdate = document.getElementById("whatToUpdate").value;
+    const updatedMovie = document.getElementById("whatToUpdateTo").value;
+    const body = { movieToUpdate, updatedMovie };
+    axios.put(`${baseURL}/movie`, body).then(function (response) {
+      document.getElementById("movie-list").innerHTML = "";
+      renderMovies(response);
+    });
+  };
+  const renderMovies = (response) => {
+    response.data.forEach((movie, i) => {
+      const newMovie = document.createElement('li')
+      newMovie.id = i
+      newMovie.className = 'movie_item'
+
+      const movieTitle = document.createElement('p')
+      movieTitle.innerText = movie
+      movieTitle.onclick = () => {
+        document.getElementById('whatToUpdate').value = movie
+      }
+
+      const trashButton = document.createElement('img')
+      trashButton.src = 'https://cdn-icons-png.flaticon.com/512/2891/2891491.png'
+      trashButton.onclick = () => deleteMovie(i)
+
+      newMovie.appendChild(movieTitle)
+      newMovie.appendChild(trashButton)
+
+      document.getElementById('movie-list').appendChild(newMovie)
+    });
+  };
+</script>
+
+</html>
